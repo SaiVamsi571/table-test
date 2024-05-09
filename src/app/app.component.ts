@@ -1,6 +1,7 @@
 import { Component, ViewChild } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup } from '@angular/forms';
 import { Table } from 'primeng/table';
+import { v4 as uuidv4 } from 'uuid';
 
 @Component({
   selector: 'app-root',
@@ -28,19 +29,19 @@ export class AppComponent {
     });
     this.products = this.form.get('products') as FormArray;
     this.addProduct({
-      id: '1000',
+      id: uuidv4(),
       name: 'Bamboo Watch',
       age: 12,
       email: 'sdjfh@gmail.com'
     });
     this.addProduct({
-      id: '1001',
+      id: uuidv4(),
       name: 'Black Watch',
       age: 19,
       email: 'hsdjfh@gmail.com'
     });
     this.addProduct({
-      id: '1002',
+      id: uuidv4(),
       name: 'Blue Band',
       age: 14,
       email: 'esdjfh@gmail.com'
@@ -53,10 +54,11 @@ export class AppComponent {
 
   addRow(): void {
     const newProduct = {
-      id: '7567',
+      id: uuidv4(),
       name: '',
       age: null,
-      email: ''
+      email: '',
+      isNew: 1
     }
     this.addProduct(newProduct);
     this.pTable.editingRowKeys[(newProduct[this.pTable.dataKey as keyof typeof newProduct]!)] = true;
@@ -73,8 +75,12 @@ export class AppComponent {
   }
 
   onRowEditCancel(product: any, index: number) {
-    this.products.at(index).patchValue(this.clonedProducts[product.id]);
-    delete this.clonedProducts[product.id];
+    if(index !== -1 && product.isNew) {
+      this.products.removeAt(index)
+    } else {
+      this.products.at(index).patchValue(this.clonedProducts[product.id]);
+      delete this.clonedProducts[product.id];
+    }
   }
 
   clear(table: Table) {
@@ -100,7 +106,7 @@ export class AppComponent {
           for (let i = 1; i < rows.length; i++) {
             const columns = rows[i].split(',');
             this.addProduct({
-              id: '', // unique id imp
+              id: uuidv4(),
               name: columns[0].slice(1, -1).trim(),
               age: parseInt(columns[1].slice(1, -1), 10) || columns[1].slice(1, -1),
               email: columns[2].slice(1, -1).trim()
