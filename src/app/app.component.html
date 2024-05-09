@@ -1,18 +1,21 @@
 <div>
-  <button pButton type="button" label="Add Row" (click)="addRow()" class="p-button-success mb-3"></button>
-  <p-table #dt1 [value]="products.value" [columns]="cols" [(selection)]="selectedProducts" dataKey="code"
-  [reorderableColumns]="true" editMode="row" [globalFilterFields]="['name','age','email']">
+  <p-table #dt1 [value]="products.value" [columns]="cols" [(selection)]="selectedProducts" dataKey="id"
+    [reorderableColumns]="true" editMode="row" [globalFilterFields]="['name','age','email']">
     <ng-template pTemplate="caption">
       <div class="d-flex justify-content-between align-items-center">
-        <button type="button" pButton pRipple icon="pi pi-file" (click)="dt1.exportCSV()" class="mr-2" pTooltip="CSV" tooltipPosition="bottom"></button>
-        <button type="button" pButton pRipple icon="pi pi-file" (click)="dt1.exportCSV()" class="mr-2" pTooltip="CSV Upload" tooltipPosition="bottom">Upload</button>
-          <button pButton label="Clear" class="p-button-outlined" icon="pi pi-filter-slash" (click)="clear(dt1)"></button>
-          <span class="p-input-icon-left ml-auto">
-              <input pInputText type="text" [(ngModel)]="searchValue" (input)="dt1.filterGlobal($any($event.target).value, 'contains')" placeholder="Search keyword" />
-          </span>
+        <span class="p-input-icon-left ml-auto">
+          <input pInputText type="text" [(ngModel)]="searchValue"
+            (input)="dt1.filterGlobal($any($event.target).value, 'contains')" placeholder="Search keyword" />
+        </span>
+        <button type="button" pButton pRipple icon="pi pi-file" (click)="dt1.exportCSV()" class="mr-2" pTooltip="CSV"
+          tooltipPosition="bottom"></button>
+        <p-fileUpload customUpload="true" accept=".csv" maxFileSize="1000000" (uploadHandler)="onUpload($event)"
+          chooseLabel="Import" class="p-mr-2 p-d-inline-block"></p-fileUpload>
+        <button pButton label="Clear" class="p-button-outlined" icon="pi pi-filter-slash" (click)="clear(dt1)"></button>
+        <button pButton type="button" label="Add Row" (click)="addRow()" class="p-button-success mb-3"></button>
       </div>
-  </ng-template>
-    
+    </ng-template>
+
     <ng-template pTemplate="header" let-columns>
       <tr>
         <th style="width:3rem"></th>

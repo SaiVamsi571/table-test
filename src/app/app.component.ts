@@ -27,25 +27,20 @@ export class AppComponent {
       products: this.fb.array([])
     });
     this.products = this.form.get('products') as FormArray;
-
-    // Add initial form array items
     this.addProduct({
       id: '1000',
-      code: 'f230fh0g3',
       name: 'Bamboo Watch',
       age: 12,
       email: 'sdjfh@gmail.com'
     });
     this.addProduct({
       id: '1001',
-      code: 'nvklal433',
       name: 'Black Watch',
       age: 19,
       email: 'hsdjfh@gmail.com'
     });
     this.addProduct({
       id: '1002',
-      code: 'zz21cz3c1',
       name: 'Blue Band',
       age: 14,
       email: 'esdjfh@gmail.com'
@@ -59,7 +54,6 @@ export class AppComponent {
   addRow(): void {
     const newProduct = {
       id: '7567',
-      code: '',
       name: '',
       age: null,
       email: ''
@@ -75,12 +69,7 @@ export class AppComponent {
   }
 
   onRowEditSave(product: any) {
-    if (product.age > 0) {
-      delete this.clonedProducts[product.id];
-      //   this.messageService.add({severity:'success', summary: 'Success', detail:'Product is updated'});
-    } else {
-      //   this.messageService.add({severity:'error', summary: 'Error', detail:'Invalid Price'});
-    }
+    delete this.clonedProducts[product.id];
   }
 
   onRowEditCancel(product: any, index: number) {
@@ -91,6 +80,36 @@ export class AppComponent {
   clear(table: Table) {
     table.clear();
     this.searchValue = '';
-}
+  }
+
+  onUpload(event: any) {
+    const file: File = event.files[0];
+    if (file) {
+      this.products.clear();
+      this.parseCsv(file);
+    }
+  }
+
+  parseCsv(file: File): void {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const content = reader.result;
+      if (typeof content === 'string') {
+        const rows = content.split('\n').map(row => row.trim());
+        if (rows.length > 0) {
+          for (let i = 1; i < rows.length; i++) {
+            const columns = rows[i].split(',');
+            this.addProduct({
+              id: '', // unique id imp
+              name: columns[0].slice(1, -1).trim(),
+              age: parseInt(columns[1].slice(1, -1), 10) || columns[1].slice(1, -1),
+              email: columns[2].slice(1, -1).trim()
+            });
+          }
+        }
+      }
+    };
+    reader.readAsText(file);
+  }
 
 }
