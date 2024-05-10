@@ -70,13 +70,16 @@ export class AppComponent {
     this.clonedProducts[product.id] = { ...product };
   }
 
-  onRowEditSave(product: any) {
+  onRowEditSave(product: any, index: number) {
+    if(index !== -1 && product.isNew) {
+      product.isNew = 0;
+    }
     delete this.clonedProducts[product.id];
   }
 
   onRowEditCancel(product: any, index: number) {
     if(index !== -1 && product.isNew) {
-      this.products.removeAt(index)
+      this.products.removeAt(index);
     } else {
       this.products.at(index).patchValue(this.clonedProducts[product.id]);
       delete this.clonedProducts[product.id];
