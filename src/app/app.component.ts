@@ -1,21 +1,37 @@
-import { Component, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ViewChild } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup } from '@angular/forms';
 import { Table } from 'primeng/table';
 import { v4 as uuidv4 } from 'uuid';
 
+export interface Product {
+  id: string,
+  name: string,
+  age: number,
+  email: string,
+  isNew?: boolean,
+  error?: {
+    name: string,
+    age: string,
+    email: string
+  }
+}
+
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-root',
   templateUrl: './app.component.html'
 })
 export class AppComponent {
-  form!: FormGroup;
+  // form!: FormGroup;
   selectedProducts: any;
-  products!: FormArray;
+  products: Product[] = [];
   @ViewChild(Table, { read: Table }) pTable!: Table;
   cols: any[] = [];
   searchValue: string | undefined;
   clonedProducts: { [s: string]: any; } = {};
-  constructor(private fb: FormBuilder) { }
+  constructor(
+    //  private fb: FormBuilder
+  ) { }
 
   ngOnInit() {
     this.cols = [
@@ -24,64 +40,60 @@ export class AppComponent {
       { field: 'email', header: 'Email' }
     ];
 
-    this.form = this.fb.group({
-      products: this.fb.array([])
-    });
-    this.products = this.form.get('products') as FormArray;
-    this.addProduct({
+    const data = [{
       id: uuidv4(),
       name: 'Bamboo Watch',
       age: 12,
       email: 'sdjfh@gmail.com'
-    });
-    this.addProduct({
+    }, {
       id: uuidv4(),
       name: 'Black Watch',
       age: 19,
       email: 'hsdjfh@gmail.com'
-    });
-    this.addProduct({
+    }, {
       id: uuidv4(),
       name: 'Blue Band',
       age: 14,
       email: 'esdjfh@gmail.com'
-    });
+    }];
+    this.products = data;
   }
 
-  addProduct(productData: any): void {
-    this.products.push(this.fb.group(productData));
+  addProduct(productData: Product): void {
+    this.products.push(productData);
   }
 
   addRow(): void {
     const newProduct = {
       id: uuidv4(),
       name: '',
-      age: null,
+      age: 0,
       email: '',
-      isNew: 1
+      isNew: true
     }
     this.addProduct(newProduct);
-    this.pTable.editingRowKeys[(newProduct[this.pTable.dataKey as keyof typeof newProduct]!)] = true;
-    //this.pTable.editingRowKeys[newProduct[this.pTable.dataKey!]] = true;
+    this.pTable.editingRowKeys[newProduct.id] = true;
     this.onRowEditInit(newProduct);
   }
 
   onRowEditInit(product: any) {
-    this.clonedProducts[product.id] = { ...product };
+    this.clonedProducts[product.id] = JSON.parse(JSON.stringify(product));
   }
 
   onRowEditSave(product: any, index: number) {
-    if(index !== -1 && product.isNew) {
-      product.isNew = 0;
+    if (index !== -1 && product.isNew) {
+      product.isNew = false;
     }
-    delete this.clonedProducts[product.id];
+    if (!(product.error.name || product.error.age || product.error.email)) {
+      delete this.clonedProducts[product.id];
+    }
   }
 
   onRowEditCancel(product: any, index: number) {
-    if(index !== -1 && product.isNew) {
-      this.products.removeAt(index);
+    if (index !== -1 && product.isNew) {
+      this.products = this.products.filter(i => i.id !== product.id);
     } else {
-      this.products.at(index).patchValue(this.clonedProducts[product.id]);
+      this.products[index] = this.clonedProducts[product.id];
       delete this.clonedProducts[product.id];
     }
   }
@@ -94,7 +106,7 @@ export class AppComponent {
   onUpload(event: any) {
     const file: File = event.files[0];
     if (file) {
-      this.products.clear();
+      this.products = [];
       this.parseCsv(file);
     }
   }
@@ -111,7 +123,7 @@ export class AppComponent {
             this.addProduct({
               id: uuidv4(),
               name: columns[0].slice(1, -1).trim(),
-              age: parseInt(columns[1].slice(1, -1), 10) || columns[1].slice(1, -1),
+              age: parseInt(columns[1].slice(1, -1), 10) || Number(columns[1].slice(1, -1)),
               email: columns[2].slice(1, -1).trim()
             });
           }
@@ -119,6 +131,41 @@ export class AppComponent {
       }
     };
     reader.readAsText(file);
+  }
+
+  validateInput(val: Product, type: string) {
+    val.error = val.error || { name: '', age: '', email: '' };
+    switch (type) {
+      case 'name':
+        let regex1 = /^[a-zA-Z ]*$/;
+        if (val.name.trim() === '' || !regex1.test(String(val.name))) {
+          val.error.name = 'Invalid Name';
+          return true;
+        } else {
+          val.error['name'] = '';
+          return false;
+        }
+      case 'age':
+        if (val.age >= 60 || val.age <= 1) {
+          val.error.age = 'Invalid Age';
+          return true;
+        } else {
+          val.error.age = '';
+          return false;
+        }
+      case 'email':
+        let regex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+        if (!regex.test(String(val.email).toLowerCase())) {
+          val.error.email = 'Invalid email';
+          return true;
+        } else {
+          val.error.email = '';
+          return false;
+        }
+      default:
+        return false;
+    }
+
   }
 
 }
